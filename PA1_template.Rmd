@@ -1,25 +1,163 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+Reproducible Research - Course Project 1
+----------------------------------------
+
+This is my submission for this course project. You can see the rest of the submission here. (https://github.com/BoKaplan/RepData_PeerAssessment1)
+  
+<br>
+
+###Loading and preprocessing the data
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# Import data
+act <- read.csv("activity.csv", colClasses = c("numeric", "Date", "numeric"))
+```
+```{r, echo=TRUE}
+# Some variables
+str(act)
+```
 
 
-## Loading and preprocessing the data
+The variables included in this dataset are:  
+1. **Steps**: Number of steps taking in a 5-minute interval (missing values are coded as NA)  
+2. **Date**: The date on which the measurement was taken in YYYY-MM-DD format  
+3. **Interval**: Identifier for the 5-minute interval in which measurement was taken
+
+<br>
+
+###What is mean total number of steps taken per day?
+**1. Calculate the total number of steps taken per day**
+
+```{r echo=TRUE}
+# Create and print number of steps per day
+StepsPerDay <- aggregate(act$steps, list(act$date), FUN=sum)
+colnames(StepsPerDay) <- c("Date", "Steps")
+StepsPerDay
+```
 
 
+**2. Create histogram**
 
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
+```{r histogram1, echo=TRUE, fig.width=10, warning=FALSE}
+# Drawing the histogram
+sum_by_date <- tapply(act$steps,act$date,sum,na.rm=TRUE)
+hist(sum_by_date,col=heat.colors(8),xlab="Number of Steps",main="Histogram of Total Steps Per Day")
+```
 
 
+**3. Figure out what the mean and median are**
 
-## Are there differences in activity patterns between weekdays and weekends?
+```{r echo=TRUE}
+# Mean
+mean(StepsPerDay$Steps, na.rm = TRUE)
+# Median
+median(StepsPerDay$Steps, na.rm = TRUE)
+```
+
+<br>
+
+###What is the average daily activity pattern?
+**1. Create a time series plot**
+
+```{r timeplot1, echo=TRUE, fig.width=10, warning=FALSE}
+# Create a table
+StepsPerInterval <- tapply(act$steps,act$interval,mean,na.rm=TRUE)
+# Create a line plot
+plot(row.names(StepsPerInterval),StepsPerInterval,type="l",xlab="Time Intervals (in Minutes)",ylab="Average Number of Steps",main="Time Series Plot of Average Daily Steps")
+```
+
+**2. Maximum number of steps with 5-minute intervals**
+
+```{r echo=TRUE, fig.width=10, warning=FALSE}
+# Interval
+maxInterval <- names(sort(StepsPerInterval, decreasing = TRUE)[1])
+# Steps
+maxSteps <- sort(StepsPerInterval, decreasing = TRUE)[1]
+```
+
+```{r echo=TRUE}
+# Missing values
+x <- max(StepsPerInterval)
+match(x,StepsPerInterval)
+```
+
+```{r echo=TRUE}
+StepsPerInterval[104]
+```
+
+<br>
+
+###Imputting missing values
+**1. Figure out the missing values**
+```{r echo=TRUE}
+# Missing values
+sum(is.na(act))
+```
+
+**2. Adjust dataset**
+
+```{r echo=TRUE}
+# Create new dataset
+act_na <- act[is.na(act),]
+act_no_na <- act[complete.cases(act),]
+act_na$steps <- as.numeric(StepsPerInterval)
+new_act <- rbind(act_na,act_no_na)
+new_act <- new_act[order(new_act[,2],new_act[,3]),]
+```
+
+**3. Adjust steps per day**
+
+```{r echo=TRUE}
+# Adjust steps
+AdjustedStepsPerDay <- aggregate(new_act$steps, list(new_act$date), FUN=sum)
+colnames(AdjustedStepsPerDay) <- c("Date", "Steps")
+AdjustedStepsPerDay
+```
+
+**4. Create adjusted histogram**
+
+```{r histogram2, echo=TRUE, fig.width=10, warning=FALSE}
+# Drawing the histogram
+new_sum_by_date <- tapply(new_act$steps,new_act$date,sum)
+hist(new_sum_by_date,col=terrain.colors(8),xlab="Total Steps by Date",main="Adjusted Histogram of Total Steps by Date (No Missing Values)")
+```
+
+**5. Figure out the adjusted mean and median**
+
+```{r echo=TRUE}
+# Mean
+mean(AdjustedStepsPerDay$Steps, na.rm = TRUE)
+# Median
+median(AdjustedStepsPerDay$Steps, na.rm = TRUE)
+```
+
+<br>
+
+###Are there differences in activity patterns between weekdays and weekends?
+**1. Create a new factor variable in the dataset with two levels**
+
+```{r echo=TRUE}
+# Creating a new dataset
+is_weekday <- function(d) {
+  wd <- weekdays(d)
+  ifelse (wd == "Saturday" | wd == "Sunday", "Weekend", "Weekday")
+}
+
+wx <- sapply(new_act$date, is_weekday)
+new_act$wk <- as.factor(wx)
+head(new_act)
+```
+**2. Create two time series plot for the average number of steps during weekdays and weekends**
+
+```{r timeplot2, echo=TRUE, fig.width=10, warning=FALSE}
+# Create table
+wdwx_act <- aggregate(steps ~ wk+interval, data=new_act, FUN=mean)
+# Create a line plot
+library(lattice)
+xyplot(steps ~ interval | factor(wk),
+       layout = c(1, 2),
+       xlab="Interval",
+       ylab="Number of Steps",
+       main="Activity Pattern (Weekdays vs Weekends)",
+       type="l",
+       lty=1,
+       data=wdwx_act)
+```
