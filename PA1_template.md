@@ -5,7 +5,7 @@ This is my submission for this course project. You can see the rest of the submi
   
 <br>
 
-###Loading and preprocessing the data
+### Loading and preprocessing the data
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 # Import data
 act <- read.csv("activity.csv", colClasses = c("numeric", "Date", "numeric"))
@@ -29,7 +29,7 @@ The variables included in this dataset are:
 
 <br>
 
-###What is mean total number of steps taken per day?
+### What is mean total number of steps taken per day?
 
 **1. Calculate the total number of steps taken per day**
 
@@ -141,7 +141,7 @@ median(StepsPerDay$Steps, na.rm = TRUE)
 
 <br>
 
-###What is the average daily activity pattern?
+### What is the average daily activity pattern?
 
 **1. Create a time series plot**
 
@@ -185,7 +185,7 @@ StepsPerInterval[104]
 
 <br>
 
-###Imputting missing values
+### Imputting missing values
 
 **1. Figure out the missing values**
 ```{r echo=TRUE}
@@ -314,7 +314,7 @@ median(AdjustedStepsPerDay$Steps, na.rm = TRUE)
 ```
 <br>
 
-###Are there differences in activity patterns between weekdays and weekends?
+### Are there differences in activity patterns between weekdays and weekends?
 
 
 **1. Create a new factor variable in the dataset with two levels**
